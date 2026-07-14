@@ -101,9 +101,9 @@ export const LogInteraction = () => {
 
     const payload = {
       hcp_id: parseInt(hcpId),
-      interaction_type,
+      interaction_type: interactionType,
       date_time: new Date(dateTime).toISOString(),
-      product_discussed,
+      product_discussed: productDiscussed,
       notes,
       outcome: outcome || 'Discussion complete.',
       follow_up_date: followUpDate ? new Date(followUpDate).toISOString() : null
