@@ -1,23 +1,73 @@
-# Dependency directories
+# ============================================
+#  Node / Frontend (React + Vite)
+# ============================================
+
+# Dependencies
 node_modules/
 frontend/node_modules/
 jspm_packages/
 web_modules/
 
-# Python virtual environments & packages
+# Build outputs
+dist/
+dist-ssr/
+build/
+out/
+frontend/dist/
+frontend/dist-ssr/
+.cache/
+
+# Package manager logs
+.npm/
+.eslintcache
+*.tsbuildinfo
+
+# ============================================
+#  Python (FastAPI backend)
+# ============================================
+
+# Virtual environments
 .venv/
 venv/
 env/
 ENV/
+env.bak/
+venv.bak/
 bin/
 lib/
 include/
-pip-selfcheck.json
+
+# Python bytecode & caches
 __pycache__/
 *.py[cod]
 *$py.class
+.python-version
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.nox/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
 
-# Environment files
+# Python build artifacts
+*.egg-info/
+.eggs/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.installed.cfg
+*.egg
+
+# ============================================
+#  Environment & secrets
+# ============================================
+
 .env
 .env.local
 .env.development.local
@@ -27,12 +77,24 @@ __pycache__/
 *.env.*
 crm_backend/.env
 
-# Database files
+# But keep example env templates (safe to commit)
+!.env.example
+!crm_backend/.env.example
+
+# ============================================
+#  Databases
+# ============================================
+
 *.db
+*.db-journal
 *.sqlite
 *.sqlite3
+crm_backend/crm_fallback.db
 
-# Logs
+# ============================================
+#  Logs
+# ============================================
+
 logs/
 *.log
 npm-debug.log*
@@ -41,11 +103,24 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# OS metadata
+# ============================================
+#  OS / Desktop metadata
+# ============================================
+
 .DS_Store
 Thumbs.db
+desktop.ini
+._*
+.DocumentRevisions-V100/
+.fseventsd/
+.Spotlight-V100/
+.TemporaryItems/
+.Trashes/
 
-# IDEs/Editors
+# ============================================
+#  IDEs / Editors
+# ============================================
+
 .vscode/
 !.vscode/extensions.json
 .idea/
@@ -54,11 +129,22 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
+.vim/
+.vscode-server/
 
-# Build outputs
-dist/
-dist-ssr/
-build/
-out/
-frontend/dist/
-frontend/dist-ssr/
+# ============================================
+#  CI / Cloud
+# ============================================
+
+.aws/
+.env.aws
+amplify/.config/local-*
+amplify/backend/amplify-meta.json
+amplify/backend/.temp
+amplify/#current-cloud-backend/
+amplify/mock-data/
+amplify/.config/local-env-info.json
+amplify/.config/local-aws-info.json
+amplify/.config/local-parameters.json
+amplify/backend/.model.schema.graphql
+amplify/backend/types/amplify-dependent-resources-ref.d.ts

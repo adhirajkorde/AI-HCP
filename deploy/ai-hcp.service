@@ -1,0 +1,14 @@
+[Unit]
+Description=AI-HCP FastAPI Backend
+After=network.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/home/ubuntu/ai-hcp/crm_backend
+EnvironmentFile=/home/ubuntu/ai-hcp/crm_backend/.env
+ExecStart=/home/ubuntu/ai-hcp/crm_backend/venv/bin/python /home/ubuntu/ai-hcp/crm_backend/run.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

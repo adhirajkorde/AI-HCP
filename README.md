@@ -118,3 +118,40 @@ Use the pre-seeded credentials to explore the features:
 - **Username**: `rep1` (or `admin`)
 - **Password**: `password123`
 - *(Or simply click the "Autofill Demo Representative" button on the login screen to sign in instantly.)*
+
+---
+
+## Deployment (AWS Free Tier)
+
+Everything needed to deploy on a single free-tier EC2 instance is in the `deploy/` folder:
+
+- **`deploy/setup.sh`** – one-click server setup (installs everything, builds, configures nginx + systemd)
+- **`deploy/nginx.conf`** – serves the React build and proxies `/api` to the FastAPI backend
+- **`deploy/ai-hcp.service`** – systemd service that keeps the backend running
+
+Run it on the server (from inside the repo):
+
+```bash
+sudo bash deploy/setup.sh
+```
+
+The setup script also creates `crm_backend/.env` automatically (random JWT secret, SQLite database, optional `GROQ_API_KEY`).
+
+## CI/CD (GitHub Actions)
+
+A pipeline is included in `.github/workflows/deploy.yml`:
+
+- **On every push/PR to `main`**: installs deps, smoke-tests the backend, lints + builds the frontend.
+- **On push to `main`**: auto-deploys to your EC2 server via SSH.
+
+To enable auto-deploy, add these secrets to your GitHub repo
+(**Settings → Secrets and variables → Actions → New repository secret**):
+
+| Secret | Value |
+|--------|-------|
+| `EC2_HOST` | Your server's public IP, e.g. `3.110.45.22` |
+| `EC2_USER` | `ubuntu` |
+| `EC2_KEY` | Full contents of your `ai-hcp-key.pem` file |
+
+> The deploy step assumes the repo is already cloned at `~/ai-hcp` on the server (see Deployment section).
+> After deploying once manually, every `git push` to `main` redeploys automatically.
