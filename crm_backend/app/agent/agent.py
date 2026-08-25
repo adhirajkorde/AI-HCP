@@ -21,6 +21,9 @@ except ImportError:
     LANGCHAIN_AVAILABLE = False
     logger.warning("LangChain/Groq libraries not available. Falling back to Mock NLP extraction.")
 
+# Import new multi-agent workflow
+from crm_backend.app.agent.agents import run_multi_agent_workflow
+
 def parse_relative_date(date_str: str) -> datetime:
     """Parses relative date texts like 'next week' to a standard datetime."""
     now = datetime.utcnow()
@@ -173,76 +176,74 @@ Respond ONLY with valid JSON. Do not include markdown code block syntax (like ``
 
 
 def run_agent(text: str, user_id: int = 1, db: Optional[Session] = None) -> AIChatResponse:
-    """Executes the AI agent to parse natural language logs, run tools, and return formatted CRM data."""
+    """Executes the AI agent to parse natural language logs using multi-agent workflow."""
     try:
-        # Determine extraction strategy
-        if settings.GROQ_API_KEY and LANGCHAIN_AVAILABLE:
-            logger.info("Using Groq API for LangGraph extraction.")
-            extracted = groq_llm_extractor(text)
-        else:
-            logger.info("Using Local Mock NLP heuristic engine.")
-            extracted = local_mock_extractor(text)
-
-        # Standardize doctor name
-        hcp_name = extracted.get("hcp_name") or "Sharma"
-        if not hcp_name.startswith("Dr. "):
-            full_hcp_name = f"Dr. {hcp_name}"
-        else:
-            full_hcp_name = hcp_name
-            # Strip Dr. prefix from short name
-            hcp_name = hcp_name.replace("Dr. ", "")
-
-        # Map to Pydantic schemas
-        entities = ExtractedEntities(
-            hcp_name=full_hcp_name,
-            specialty=extracted.get("specialty") or "General Medicine",
-            hospital_clinic=extracted.get("hospital_clinic") or "General Hospital",
-            interaction_type=extracted.get("interaction_type") or "In-Person Meeting",
-            product_discussed=extracted.get("product_discussed") or "CardioPlus",
-            outcome=extracted.get("outcome") or "Discussed clinical trials",
-            notes=extracted.get("notes") or text,
-            follow_up_date=extracted.get("follow_up_date")
-        )
-
+        # Use new multi-agent workflow
+        logger.info("Running multi-agent workflow for interaction analysis.")
+        result = run_multi_agent_workflow(text, user_id, db)
+        
+        # Convert to AIChatResponse format for backward compatibility
+        entities = result.get("entities")
+        if entities is None:
+            entities = ExtractedEntities()
+        
         return AIChatResponse(
-            success=True,
-            message="Natural language input successfully parsed by AI CRM Agent.",
+            success=result.get("success", True),
+            message=result.get("message", "Multi-agent analysis complete."),
             entities=entities,
-            summary=extracted.get("summary") or f"Logged interaction with {full_hcp_name}.",
-            sentiment=extracted.get("sentiment") or "Neutral",
-            engagement_score=int(extracted.get("engagement_score") or 50),
-            follow_up_action=extracted.get("follow_up_action"),
-            suggested_priority=extracted.get("suggested_priority") or "Medium",
-            raw_result=extracted
+            summary=result.get("summary", ""),
+            sentiment=result.get("sentiment", "Neutral"),
+            engagement_score=result.get("engagement_score", 50),
+            follow_up_action=result.get("follow_up_action"),
+            suggested_priority=result.get("suggested_priority", "Medium"),
+            raw_result=result
         )
         
     except Exception as e:
-        logger.error(f"Agent failed to execute: {e}")
-        # Fallback to local mockup parser if LLM failed
+        logger.error(f"Multi-agent workflow failed: {e}")
+        # Fallback to legacy extraction
         try:
-            extracted = local_mock_extractor(text)
+            if settings.GROQ_API_KEY and LANGCHAIN_AVAILABLE:
+                logger.info("Falling back to Groq LLM extraction.")
+                extracted = groq_llm_extractor(text)
+            else:
+                logger.info("Falling back to Local Mock NLP heuristic engine.")
+                extracted = local_mock_extractor(text)
+
+            # Standardize doctor name
+            hcp_name = extracted.get("hcp_name") or "Sharma"
+            if not hcp_name.startswith("Dr. "):
+                full_hcp_name = f"Dr. {hcp_name}"
+            else:
+                full_hcp_name = hcp_name
+                hcp_name = hcp_name.replace("Dr. ", "")
+
+            # Map to Pydantic schemas
             entities = ExtractedEntities(
-                hcp_name=extracted["full_hcp_name"],
-                specialty="General Medicine",
-                hospital_clinic="General Hospital",
-                interaction_type=extracted["interaction_type"],
-                product_discussed=extracted["product_discussed"],
-                outcome=extracted["outcome"],
-                notes=extracted["notes"],
-                follow_up_date=extracted["follow_up_date"]
+                hcp_name=full_hcp_name,
+                specialty=extracted.get("specialty") or "General Medicine",
+                hospital_clinic=extracted.get("hospital_clinic") or "General Hospital",
+                interaction_type=extracted.get("interaction_type") or "In-Person Meeting",
+                product_discussed=extracted.get("product_discussed") or "CardioPlus",
+                outcome=extracted.get("outcome") or "Discussed clinical trials",
+                notes=extracted.get("notes") or text,
+                follow_up_date=extracted.get("follow_up_date")
             )
+
             return AIChatResponse(
                 success=True,
-                message="Parsed using fallback NLP engine after LLM error.",
+                message="Natural language input successfully parsed by AI CRM Agent (legacy).",
                 entities=entities,
-                summary=extracted["summary"],
-                sentiment=extracted["sentiment"],
-                engagement_score=extracted["engagement_score"],
-                follow_up_action=extracted["follow_up_action"],
-                suggested_priority=extracted["suggested_priority"],
+                summary=extracted.get("summary") or f"Logged interaction with {full_hcp_name}.",
+                sentiment=extracted.get("sentiment") or "Neutral",
+                engagement_score=int(extracted.get("engagement_score") or 50),
+                follow_up_action=extracted.get("follow_up_action"),
+                suggested_priority=extracted.get("suggested_priority") or "Medium",
                 raw_result=extracted
             )
+            
         except Exception as fallback_err:
+            logger.error(f"Fallback also failed: {fallback_err}")
             return AIChatResponse(
                 success=False,
                 message=f"Agent process failed completely: {str(e)}. Fallback error: {str(fallback_err)}",

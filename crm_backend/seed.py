@@ -15,7 +15,12 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("seed")
 
 def seed_db():
+    # Drop all tables and recreate for clean schema
+    logger.info("Dropping all tables...")
+    Base.metadata.drop_all(bind=engine)
+    
     # Ensure tables exist
+    logger.info("Creating tables...")
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:

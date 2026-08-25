@@ -123,19 +123,70 @@ Use the pre-seeded credentials to explore the features:
 
 ## Deployment (AWS Free Tier)
 
-Everything needed to deploy on a single free-tier EC2 instance is in the `deploy/` folder:
+Everything needed to deploy on a single free-tier EC2 instance (t2.micro / t3.micro - 1 vCPU, 1 GB RAM) is in the `deploy/` folder:
 
-- **`deploy/setup.sh`** – one-click server setup (installs everything, builds, configures nginx + systemd)
+- **`deploy/setup.sh`** – one-click server setup (installs everything, builds, configures nginx + systemd with memory limits)
 - **`deploy/nginx.conf`** – serves the React build and proxies `/api` to the FastAPI backend
-- **`deploy/ai-hcp.service`** – systemd service that keeps the backend running
+- **`deploy/ai-hcp.service`** – systemd service with memory/CPU limits for free tier
 
-Run it on the server (from inside the repo):
+### Quick Deploy (Free Tier Optimized)
 
 ```bash
+# On the EC2 instance (t2.micro/t3.micro)
+git clone <your-repo>
+cd ai-hcp
 sudo bash deploy/setup.sh
 ```
 
-The setup script also creates `crm_backend/.env` automatically (random JWT secret, SQLite database, optional `GROQ_API_KEY`).
+The setup script creates `crm_backend/.env` automatically with:
+- Random JWT secret
+- SQLite database (no PostgreSQL needed - saves ~200MB RAM)
+- Optional `GROQ_API_KEY` for AI features
+
+### Docker Compose (Alternative - Production)
+
+For production with PostgreSQL (requires t3.small or larger):
+
+```bash
+# Start all services (PostgreSQL + Redis + Backend + Frontend)
+docker-compose up -d
+
+# With n8n automation (requires more memory)
+docker-compose --profile automation up -d
+```
+
+### Free Tier Resource Limits
+
+| Service | Memory Limit | CPU Limit |
+|---------|-------------|-----------|
+| PostgreSQL | 256 MB | 0.5 vCPU |
+| Redis | 64 MB | 0.25 vCPU |
+| Backend (FastAPI) | 512 MB | 0.5 vCPU |
+| Frontend (nginx) | 64 MB | 0.25 vCPU |
+| **Total** | **~900 MB** | **~1.5 vCPU** |
+
+For strict free tier (t2.micro - 1GB RAM), use SQLite mode:
+```bash
+# In .env
+DATABASE_URL=sqlite:///./crm_fallback.db
+```
+
+This avoids PostgreSQL entirely, saving ~256 MB RAM.
+
+### Monitoring Free Tier Usage
+
+```bash
+# Check memory usage
+free -h
+
+# Check Docker stats
+docker stats --no-stream
+
+# Check systemd service status
+systemctl status ai-hcp
+```
+
+---
 
 ## CI/CD (GitHub Actions)
 

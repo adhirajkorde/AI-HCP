@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import logging
 
 from crm_backend.app.core.db import Base, engine
-from crm_backend.app.api import auth, hcps, interactions, followups, analytics
+from crm_backend.app.api import auth, hcps, interactions, followups, analytics, automation
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -18,9 +18,9 @@ except Exception as e:
     logger.error(f"Error during database table initialization: {e}")
 
 app = FastAPI(
-    title="AI-First HCP CRM API",
-    description="Backend API for pharmaceutical sales interaction logs & AI insight summaries.",
-    version="1.0.0"
+    title="AI-First HCP CRM & Workflow Automation Platform",
+    description="Backend API for pharmaceutical sales interaction logs, AI insight summaries, and workflow automation.",
+    version="2.0.0"
 )
 
 # Enable CORS - allow all origins (auth uses Bearer token headers, not cookies)
@@ -38,11 +38,12 @@ app.include_router(hcps.router, prefix="/api")
 app.include_router(interactions.router, prefix="/api")
 app.include_router(followups.router, prefix="/api")
 app.include_router(analytics.router, prefix="/api")
+app.include_router(automation.router, prefix="/api")
 
 @app.get("/")
 def read_root():
     return {
         "status": "online",
-        "service": "AI-First HCP CRM Backend API",
+        "service": "AI-First HCP CRM & Workflow Automation Platform",
         "docs": "/docs"
     }

@@ -10,7 +10,11 @@ import {
   LogOut,
   Activity,
   Menu,
-  X
+  X,
+  Zap,
+  Bell,
+  Shield,
+  Inbox
 } from 'lucide-react';
 import { logout } from '../features/authSlice';
 
@@ -30,6 +34,9 @@ export const Sidebar = ({ mobileOpen, setMobileOpen }) => {
     { name: 'HCP Directory', path: '/hcps', icon: <Users size={20} /> },
     { name: 'Follow-ups', path: '/followups', icon: <CheckSquare size={20} /> },
     { name: 'Analytics & Insights', path: '/analytics', icon: <BarChart3 size={20} /> },
+    { name: 'AI Action Center', path: '/ai-action-center', icon: <Zap size={20} /> },
+    { name: 'Notifications', path: '/notifications', icon: <Bell size={20} /> },
+    { name: 'Approvals', path: '/approvals', icon: <Shield size={20} /> },
   ];
 
   return (

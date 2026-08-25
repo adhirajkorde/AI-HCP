@@ -10,5 +10,13 @@ ExecStart=/home/ubuntu/ai-hcp/crm_backend/venv/bin/python /home/ubuntu/ai-hcp/cr
 Restart=always
 RestartSec=5
 
+# Resource limits for AWS Free Tier (t2.micro/t3.micro - 1GB RAM)
+MemoryLimit=512M
+MemorySwapLimit=512M
+CPUQuota=50%
+
+# Limit file descriptors
+LimitNOFILE=65536
+
 [Install]
 WantedBy=multi-user.target

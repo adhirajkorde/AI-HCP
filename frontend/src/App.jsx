@@ -16,6 +16,9 @@ import HCPProfile from './pages/HCPProfile';
 import FollowUps from './pages/FollowUps';
 import Analytics from './pages/Analytics';
 import Login from './pages/Login';
+import AIActionCenter from './pages/AIActionCenter';
+import Notifications from './pages/Notifications';
+import Approvals from './pages/Approvals';
 
 function App() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -70,6 +73,24 @@ function App() {
               <Route path="/analytics" element={
                 <ProtectedRoute>
                   <Analytics />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/ai-action-center" element={
+                <ProtectedRoute>
+                  <AIActionCenter />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/notifications" element={
+                <ProtectedRoute>
+                  <Notifications />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/approvals" element={
+                <ProtectedRoute>
+                  <Approvals />
                 </ProtectedRoute>
               } />
 

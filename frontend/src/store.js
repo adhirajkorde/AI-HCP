@@ -4,6 +4,7 @@ import hcpReducer from './features/hcpSlice';
 import interactionReducer from './features/interactionSlice';
 import followupReducer from './features/followupSlice';
 import analyticsReducer from './features/analyticsSlice';
+import automationReducer from './features/automationSlice';
 
 export const store = configureStore({
   reducer: {
@@ -12,6 +13,7 @@ export const store = configureStore({
     interactions: interactionReducer,
     followups: followupReducer,
     analytics: analyticsReducer,
+    automation: automationReducer,
   },
 });
 export default store;

@@ -4,11 +4,14 @@ from fastapi import HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
+import logging
 from crm_backend.app.core.db import get_db
 from crm_backend.app.core.security import verify_password, hash_password, create_access_token, verify_token
 from crm_backend.app.repositories.crm_repositories import UserRepository, HCPRepository, InteractionRepository, FollowUpRepository, AIInsightRepository
 from crm_backend.app.models.database import User, HCP, Interaction, FollowUp, AIInsight
 from crm_backend.app.schemas.crm_schemas import UserCreate, UserLogin, UserResponse, HCPCreate, HCPUpdate, InteractionCreate, FollowUpCreate, FollowUpUpdate, Token, HCPDetailResponse
+
+logger = logging.getLogger("crm_services")
 
 # OAuth2 context
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
@@ -127,6 +130,29 @@ class InteractionService:
 
         # Update AI insights based on this interaction notes
         InteractionService.update_hcp_insights(db, interaction.hcp_id)
+
+        # Publish automation event
+        try:
+            from crm_backend.app.services.automation_engine import publish_event
+            from crm_backend.app.models.database import AutomationEventType
+            hcp = HCPRepository.get_by_id(db, interaction.hcp_id)
+            publish_event(
+                event_type=AutomationEventType.INTERACTION_CREATED.value,
+                source_id=new_interaction.id,
+                source_type="interaction",
+                user_id=user_id,
+                payload={
+                    "interaction_id": new_interaction.id,
+                    "hcp_id": interaction.hcp_id,
+                    "hcp_name": hcp.name if hcp else "Unknown",
+                    "product_discussed": interaction.product_discussed,
+                    "interaction_type": interaction.interaction_type,
+                    "sentiment": "Neutral",  # Will be updated by AI
+                    "priority": "Medium"
+                }
+            )
+        except Exception as e:
+            logger.warning(f"Failed to publish automation event: {e}")
 
         return new_interaction
 
